@@ -1,0 +1,72 @@
+---
+import "../styles/global.css";
+import { SITE_NAME } from "../lib/site";
+import type { Mood } from "../domain/types";
+
+interface Props {
+  title: string;
+  description?: string;
+  mood?: Mood;
+  canonicalPath?: string;
+  markdownPath?: string;
+  jsonLd?: Record<string, unknown> | Record<string, unknown>[];
+}
+
+const {
+  title,
+  description = "Aprende a preparar cócteles en casa con lo que tienes o según tus gustos.",
+  mood = "caribe",
+  canonicalPath = Astro.url.pathname,
+  markdownPath,
+  jsonLd,
+} = Astro.props;
+
+const fullTitle = title === SITE_NAME ? title : `${title} · ${SITE_NAME}`;
+---
+
+<!doctype html>
+<html lang="es" data-mood={mood}>
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta name="description" content={description} />
+    <meta name="generator" content={Astro.generator} />
+    <title>{fullTitle}</title>
+    <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+    <link rel="describedby" href="/llms.txt" />
+    {markdownPath && (
+      <link rel="alternate" type="text/markdown" href={markdownPath} />
+    )}
+    {jsonLd && (
+      <script type="application/ld+json" set:html={JSON.stringify(jsonLd)} />
+    )}
+  </head>
+  <body>
+    <div class="age-banner">
+      Solo para mayores de 18 años. Bebe con responsabilidad. Algunos enlaces de compra son de afiliado.
+    </div>
+    <div class="shell">
+      <header class="site-header">
+        <a class="brand" href="/">
+          <span class="brand-mark">C</span>
+          <span>{SITE_NAME}</span>
+        </a>
+        <nav class="nav" aria-label="Principal">
+          <a href="/despensa">Con lo que tengo</a>
+          <a href="/sorprendeme">Sorpréndeme</a>
+          <a href="/estilo/caribe">Estilos</a>
+          <a href="/fuentes">Fuentes</a>
+        </nav>
+      </header>
+      <main>
+        <slot />
+      </main>
+      <footer class="site-footer">
+        <p>
+          Recetas citadas a TheCocktailDB y, cuando aplica, a Wikidata. Textos propios en español.
+          <a href="/llms.txt">llms.txt</a> · <a href="/aviso">Aviso</a>
+        </p>
+      </footer>
+    </div>
+  </body>
+</html>

@@ -1,0 +1,162 @@
+---
+export const prerender = true;
+import BaseLayout from "../../components/BaseLayout.astro";
+import CocktailCard from "../../components/CocktailCard.astro";
+import { getCocktailBySlug, getCocktails, getIngredientMap } from "../../domain/catalog";
+import { MOOD_LABEL } from "../../domain/mood";
+import { shopUrlForIngredient } from "../../domain/affiliate";
+import { affiliateConfig } from "../../lib/site";
+import { getBrands } from "../../domain/catalog";
+
+export function getStaticPaths() {
+  return getCocktails().map((cocktail) => ({
+    params: { slug: cocktail.slug },
+  }));
+}
+
+const { slug } = Astro.params;
+const cocktail = getCocktailBySlug(slug!);
+if (!cocktail) {
+  throw new Error(`Cocktail not found: ${slug}`);
+}
+
+const ingredientMap = getIngredientMap();
+const brands = getBrands();
+const config = affiliateConfig();
+const related = getCocktails()
+  .filter((c) => c.slug !== cocktail.slug && c.mood === cocktail.mood)
+  .slice(0, 3);
+
+const jsonLd = {
+  "@context": "https://schema.org",
+  "@type": "Recipe",
+  name: cocktail.nameEs,
+  description:
+    cocktail.introEs ||
+    `Receta de ${cocktail.nameEs} para preparar en casa.`,
+  recipeCategory: cocktail.category,
+  recipeIngredient: cocktail.ingredients.map((item) => {
+    const ingredient = ingredientMap.get(item.ingredientId);
+    return `${item.measure} ${ingredient?.nameEs || item.ingredientId}`;
+  }),
+  recipeInstructions: cocktail.instructionsEs.map((text, index) => ({
+    "@type": "HowToStep",
+    position: index + 1,
+    text,
+  })),
+  suitableForDiet: cocktail.alcoholic ? undefined : "https://schema.org/AlcoholFreeDiet",
+};
+
+const glassEmoji =
+  cocktail.mood === "sofisticado"
+    ? "🍸"
+    : cocktail.mood === "tiki"
+      ? "🏝️"
+      : cocktail.mood === "caribe"
+        ? "🍹"
+        : "🥃";
+---
+
+<BaseLayout
+  title={cocktail.nameEs}
+  description={cocktail.introEs || `Cómo preparar un ${cocktail.nameEs} en casa.`}
+  mood={cocktail.mood}
+  markdownPath={`/coctel/${cocktail.slug}.md`}
+  jsonLd={jsonLd}
+>
+  <article class="hero cocktail-hero">
+    <div>
+      <p class="muted" style="margin:0 0 0.5rem;">
+        {MOOD_LABEL[cocktail.mood]} · {cocktail.glass}
+        {cocktail.ibaCategory ? ` · IBA: ${cocktail.ibaCategory}` : ""}
+      </p>
+      <h1 class="cocktail-title">{cocktail.nameEs}</h1>
+      <p class="lead">
+        {cocktail.introEs ||
+          `Receta de ${cocktail.nameEs} lista para casa, con ingredientes y pasos claros.`}
+      </p>
+      <div class="chip-row">
+        {cocktail.tastes.map((taste) => <span class="chip">{taste}</span>)}
+        {!cocktail.alcoholic && <span class="chip">sin alcohol</span>}
+      </div>
+    </div>
+    <div class="glass-art" aria-hidden="true">{glassEmoji}</div>
+  </article>
+
+  <section class="grid" style="margin-top:1.5rem;">
+    <div class="card">
+      <h2>Ingredientes</h2>
+      <ul>
+        {cocktail.ingredients.map((item) => {
+          const ingredient = ingredientMap.get(item.ingredientId);
+          const brand = brands.find((b) => b.ingredientId === item.ingredientId);
+          const buyUrl = shopUrlForIngredient(
+            ingredient?.nameEs || item.ingredientId,
+            config,
+            brand?.searchQuery,
+          );
+          return (
+            <li style="margin-bottom:0.55rem;">
+              <strong>{item.measure}</strong>{" "}
+              {ingredient?.nameEs || item.ingredientId}
+              {buyUrl && (
+                <>
+                  {" "}
+                  · <a href={buyUrl} rel="sponsored noopener" target="_blank">Comprar</a>
+                </>
+              )}
+            </li>
+          );
+        })}
+      </ul>
+      {!config.amazonTag && !config.shopUrlTemplate && (
+        <p class="muted" style="font-size:0.9rem;">
+          Cuando configures el tag de afiliado en Wrangler, aquí aparecerán enlaces de compra.
+        </p>
+      )}
+    </div>
+
+    <div class="card">
+      <h2>Preparación</h2>
+      <ol>
+        {cocktail.instructionsEs.map((step) => <li style="margin-bottom:0.55rem;">{step}</li>)}
+      </ol>
+    </div>
+  </section>
+
+  {cocktail.faq && cocktail.faq.length > 0 && (
+    <section class="card" style="margin-top:1.5rem;">
+      <h2>Preguntas frecuentes</h2>
+      {cocktail.faq.map((item) => (
+        <div style="margin-bottom:1rem;">
+          <h3 style="margin-bottom:0.35rem;">{item.q}</h3>
+          <p class="muted" style="margin:0;">{item.a}</p>
+        </div>
+      ))}
+    </section>
+  )}
+
+  <section class="card" style="margin-top:1.5rem;">
+    <h2>Fuentes</h2>
+    <ul>
+      {cocktail.sources.map((source) => (
+        <li>
+          <a href={source.url} rel="noopener" target="_blank">{source.name}</a>
+          {source.license ? ` · ${source.license}` : ""}
+        </li>
+      ))}
+    </ul>
+    <p class="muted">
+      También disponible en Markdown: <a href={`/coctel/${cocktail.slug}.md`}>{cocktail.slug}.md</a>
+    </p>
+  </section>
+
+  {related.length > 0 && (
+    <section style="margin-top:2rem;">
+      <h2 class="page-title">Del mismo ambiente</h2>
+      <div class="grid">
+        {related.map((item) => <CocktailCard cocktail={item} />)}
+      </div>
+    </section>
+  )}
+</BaseLayout>

@@ -1,0 +1,42 @@
+---
+export const prerender = true;
+import BaseLayout from "../components/BaseLayout.astro";
+import CocktailCard from "../components/CocktailCard.astro";
+import { getFeaturedCocktails } from "../domain/catalog";
+import { SITE_NAME, SITE_TAGLINE } from "../lib/site";
+
+const featured = getFeaturedCocktails().slice(0, 9);
+---
+
+<BaseLayout title={SITE_NAME} description={SITE_TAGLINE} mood="caribe">
+  <section class="hero">
+    <div>
+      <p class="muted" style="margin:0 0 0.5rem;">Bar en casa · look caribeño</p>
+      <h1>Tu cóctel, con lo que hay en la nevera</h1>
+      <p class="lead">{SITE_TAGLINE}</p>
+      <div class="actions">
+        <a class="button" href="/despensa">Con lo que tengo</a>
+        <a class="button secondary" href="/sorprendeme">Sorpréndeme</a>
+      </div>
+    </div>
+  </section>
+
+  <section style="margin-top:2rem;">
+    <h2 class="page-title">Explora por base o estilo</h2>
+    <div class="grid">
+      <a class="card" href="/con/ron"><h3>Con ron</h3><p class="muted">Mojito, Daiquirí, Cuba Libre…</p></a>
+      <a class="card" href="/con/ginebra"><h3>Con ginebra</h3><p class="muted">Negroni, Martini, Gin-tonic…</p></a>
+      <a class="card" href="/con/vodka"><h3>Con vodka</h3><p class="muted">Cosmopolitan, Moscow Mule…</p></a>
+      <a class="card" href="/estilo/sofisticado"><h3>Sofisticados</h3><p class="muted">Old Fashioned, Manhattan…</p></a>
+      <a class="card" href="/estilo/caribe"><h3>Caribeños</h3><p class="muted">Playa, menta y cítricos</p></a>
+      <a class="card" href="/sin-alcohol"><h3>Sin alcohol</h3><p class="muted">Misma fiesta, otra base</p></a>
+    </div>
+  </section>
+
+  <section style="margin-top:2rem;">
+    <h2 class="page-title">Clásicos para aprender</h2>
+    <div class="grid">
+      {featured.map((cocktail) => <CocktailCard cocktail={cocktail} />)}
+    </div>
+  </section>
+</BaseLayout>

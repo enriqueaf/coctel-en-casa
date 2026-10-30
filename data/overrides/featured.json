@@ -1,0 +1,133 @@
+{
+  "mojito": {
+    "nameEs": "Mojito",
+    "introEs": "El Mojito es el trago caribeño por excelencia: ron blanco, lima, azúcar, menta y soda. Refrescante, fácil de preparar en casa y perfecto para una terraza.",
+    "mood": "caribe",
+    "instructionsEs": [
+      "Machaca suavemente las hojas de menta con el azúcar y el zumo de lima en un vaso alto.",
+      "Añade el ron blanco y llena el vaso de hielo picado.",
+      "Completa con soda y remueve con cuidado de abajo arriba.",
+      "Decora con una ramita de menta y una rodaja de lima."
+    ],
+    "faq": [
+      {
+        "q": "¿Puedo usar ron oscuro?",
+        "a": "Sí, pero el perfil cambia: el blanco deja el cítrico y la menta más limpios."
+      }
+    ]
+  },
+  "daiquiri": {
+    "nameEs": "Daiquirí",
+    "introEs": "Tres ingredientes y equilibrio: ron blanco, lima y azúcar. El Daiquirí clásico se agita con hielo y se sirve frío, sin adornos superfluos.",
+    "mood": "caribe",
+    "instructionsEs": [
+      "Vierte el ron, el zumo de lima y el azúcar o jarabe en una coctelera con hielo.",
+      "Agita con fuerza unos 12 segundos.",
+      "Cuela en una copa de cóctel fría.",
+      "Opcional: una fina rodaja de lima."
+    ]
+  },
+  "pina-colada": {
+    "nameEs": "Piña colada",
+    "introEs": "Crema de coco, piña y ron: la postal de playa en vaso. En casa funciona en batidora o agitada con hielo picado.",
+    "mood": "caribe",
+    "instructionsEs": [
+      "Bate o agita el ron, el zumo de piña y la crema de coco con hielo.",
+      "Sirve en vaso alto o hurricane.",
+      "Decora con piña o cereza si te apetece."
+    ]
+  },
+  "margarita": {
+    "nameEs": "Margarita",
+    "introEs": "Tequila, triple sec y lima, con el borde de sal que marca el contraste. Un clásico contemporáneo fácil de clavar en casa.",
+    "mood": "clasico",
+    "instructionsEs": [
+      "Humedece el borde de la copa y pásalo por sal.",
+      "Agita tequila, triple sec y zumo de lima con hielo.",
+      "Cuela en la copa fría."
+    ]
+  },
+  "negroni": {
+    "nameEs": "Negroni",
+    "introEs": "Partes iguales de ginebra, vermut dulce y Campari. Amargo, rojo y sofisticado: se remueve, no se agita.",
+    "mood": "sofisticado",
+    "instructionsEs": [
+      "Llena un vaso bajo con hielo.",
+      "Añade ginebra, vermut dulce y Campari a partes iguales.",
+      "Remueve unos 20 segundos.",
+      "Exprime una piel de naranja sobre el vaso y úsala de decoración."
+    ]
+  },
+  "old-fashioned": {
+    "nameEs": "Old Fashioned",
+    "introEs": "Whisky, azúcar, bitters y una piel de cítrico. Poco ruido, mucho carácter: el cóctel sofisticado de referencia.",
+    "mood": "sofisticado",
+    "instructionsEs": [
+      "Disuelve el azúcar con unos golpes de bitters y un chorrito de agua en un vaso bajo.",
+      "Añade hielo grande y el whisky.",
+      "Remueve hasta que se enfríe.",
+      "Exprime una piel de naranja sobre el trago."
+    ]
+  },
+  "dry-martini": {
+    "nameEs": "Martini seco",
+    "introEs": "Ginebra (o vodka), vermut seco y un gesto de elegancia. El look de la ficha se pone sofisticado porque el trago lo pide.",
+    "mood": "sofisticado",
+    "instructionsEs": [
+      "Enfría la copa de Martini.",
+      "Remueve ginebra y vermut seco con hielo.",
+      "Cuela en la copa.",
+      "Decora con aceituna o twist de limón."
+    ]
+  },
+  "manhattan": {
+    "nameEs": "Manhattan",
+    "introEs": "Whisky, vermut dulce y bitters. Urbano, serio y perfecto después de cenar.",
+    "mood": "sofisticado",
+    "instructionsEs": [
+      "Remueve whisky, vermut dulce y bitters con hielo.",
+      "Cuela en copa de cóctel.",
+      "Decora con cereza al marrasquino."
+    ]
+  },
+  "mai-tai": {
+    "nameEs": "Mai Tai",
+    "introEs": "Ron, curaçao, lima y orgeat: el corazón del estilo tiki. En casa puedes adaptar las marcas, pero guarda el equilibrio ácido-dulce.",
+    "mood": "tiki",
+    "instructionsEs": [
+      "Agita los rones, el curaçao, el zumo de lima y el orgeat con hielo.",
+      "Vierte en vaso bajo o tiki con hielo fresco.",
+      "Decora con menta y lima."
+    ]
+  },
+  "cuba-libre": {
+    "nameEs": "Cuba Libre",
+    "introEs": "Ron, cola y lima. Dos minutos y un vaso alto: el cóctel de despensa por excelencia.",
+    "mood": "caribe",
+    "instructionsEs": [
+      "Llena un vaso alto de hielo.",
+      "Añade el ron y un chorro de lima.",
+      "Completa con cola y remueve suavemente."
+    ]
+  },
+  "cosmopolitan": {
+    "nameEs": "Cosmopolitan",
+    "introEs": "Vodka, triple sec, lima y arándanos. Rosa, ácido y de fiesta, sin perder el equilibrio.",
+    "mood": "clasico",
+    "instructionsEs": [
+      "Agita todos los ingredientes con hielo.",
+      "Cuela en copa de Martini.",
+      "Decora con twist de naranja o lima."
+    ]
+  },
+  "french-75": {
+    "nameEs": "French 75",
+    "introEs": "Ginebra, limón, azúcar y burbujas. Elegante y festivo a la vez.",
+    "mood": "sofisticado",
+    "instructionsEs": [
+      "Agita ginebra, limón y azúcar con hielo.",
+      "Cuela en flauta.",
+      "Completa con champán o cava bien frío."
+    ]
+  }
+}

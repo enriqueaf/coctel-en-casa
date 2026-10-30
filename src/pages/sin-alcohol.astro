@@ -1,0 +1,22 @@
+---
+export const prerender = true;
+import BaseLayout from "../components/BaseLayout.astro";
+import CocktailCard from "../components/CocktailCard.astro";
+import { getNonAlcoholicCocktails } from "../domain/catalog";
+
+const cocktails = getNonAlcoholicCocktails();
+---
+
+<BaseLayout
+  title="Cócteles sin alcohol"
+  description="Recetas sin alcohol para preparar en casa con el mismo cuidado que un cóctel clásico."
+  mood="clasico"
+>
+  <section class="hero">
+    <h1>Sin alcohol</h1>
+    <p class="lead">Misma despensa y mismos pasos claros, sin destilados.</p>
+  </section>
+  <div class="grid" style="margin-top:1.5rem;">
+    {cocktails.map((cocktail) => <CocktailCard cocktail={cocktail} />)}
+  </div>
+</BaseLayout>

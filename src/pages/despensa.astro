@@ -1,0 +1,306 @@
+---
+export const prerender = true;
+import BaseLayout from "../components/BaseLayout.astro";
+import { getBrands, getCocktails, getIngredients } from "../domain/catalog";
+
+const ingredients = getIngredients().map((i) => ({
+  id: i.id,
+  name: i.name,
+  nameEs: i.nameEs,
+  aliases: i.aliases,
+  kind: i.kind,
+  alcoholic: i.alcoholic,
+  family: i.family,
+}));
+const brands = getBrands();
+const cocktails = getCocktails().map((c) => ({
+  id: c.id,
+  slug: c.slug,
+  nameEs: c.nameEs,
+  alcoholic: c.alcoholic,
+  mood: c.mood,
+  tastes: c.tastes,
+  bases: c.bases,
+  ingredients: c.ingredients,
+  introEs: c.introEs || "",
+  glass: c.glass,
+  category: c.category,
+}));
+---
+
+<BaseLayout
+  title="Con lo que tengo"
+  description="Busca ingredientes o marcas de tu casa y recibe cócteles que puedes preparar ya."
+  mood="caribe"
+>
+  <section class="hero">
+    <h1>Con lo que tengo</h1>
+    <p class="lead">
+      Escribe un ingrediente, una marca o un tipo. No hay lista infinita de casillas: solo un buscador y las fichas que vas eligiendo.
+    </p>
+
+    <div class="search-box" id="pantry-app">
+      <div class="search-modes" role="group" aria-label="Modo de búsqueda">
+        <button type="button" data-mode="todo" aria-pressed="true">Todo</button>
+        <button type="button" data-mode="marca" aria-pressed="false">Marca</button>
+        <button type="button" data-mode="tipo" aria-pressed="false">Tipo</button>
+      </div>
+      <label class="muted" for="pantry-query">Buscar en tu despensa</label>
+      <input
+        id="pantry-query"
+        class="search-input"
+        type="search"
+        placeholder="Ron, lima, Bacardí, cítrico…"
+        autocomplete="off"
+      />
+      <ul class="search-results" id="search-results" hidden></ul>
+      <div class="pantry-chips" id="pantry-chips" aria-live="polite"></div>
+      <div class="actions">
+        <button class="button" type="button" id="match-button">Ver cócteles</button>
+      </div>
+    </div>
+  </section>
+
+  <section style="margin-top:2rem;" id="results" hidden>
+    <h2 class="page-title">Resultados</h2>
+    <div class="grid" id="results-grid"></div>
+  </section>
+</BaseLayout>
+
+<script
+  define:vars={{
+    ingredients,
+    brands,
+    cocktails,
+  }}
+>
+  const FAMILY_LABELS = {
+    ron: "Ron",
+    ginebra: "Ginebra",
+    vodka: "Vodka",
+    whisky: "Whisky",
+    tequila: "Tequila",
+    brandy: "Brandy",
+    citrico: "Cítrico",
+    refresco: "Refresco",
+    amargo: "Amargo",
+    licor: "Licor",
+    zumo: "Zumo",
+  };
+
+  function normalizeText(input) {
+    return input
+      .normalize("NFD")
+      .replace(/[\u0300-\u036f]/g, "")
+      .toLowerCase()
+      .replace(/[^a-z0-9\s]/g, " ")
+      .replace(/\s+/g, " ")
+      .trim();
+  }
+
+  function includesNormalized(haystack, needle) {
+    const h = normalizeText(haystack);
+    const n = normalizeText(needle);
+    return Boolean(n) && h.includes(n);
+  }
+
+  function searchPantry(query, mode, limit = 8) {
+    const q = normalizeText(query);
+    if (!q) return [];
+    const hits = [];
+
+    if (mode === "marca" || mode === "todo") {
+      for (const brand of brands) {
+        const hay = [brand.name, ...(brand.aliases || [])].join(" ");
+        if (!includesNormalized(hay, q)) continue;
+        const ingredient = ingredients.find((i) => i.id === brand.ingredientId);
+        hits.push({
+          kind: "brand",
+          id: `brand:${brand.id}`,
+          label: brand.name,
+          subtitle: ingredient ? `Como ${ingredient.nameEs}` : undefined,
+          ingredientId: brand.ingredientId,
+          brandId: brand.id,
+        });
+      }
+    }
+
+    if (mode === "tipo" || mode === "todo") {
+      for (const [family, label] of Object.entries(FAMILY_LABELS)) {
+        if (!includesNormalized(label, q) && !includesNormalized(family, q)) continue;
+        for (const ingredient of ingredients.filter((i) => i.family === family).slice(0, 5)) {
+          hits.push({
+            kind: "family",
+            id: `family:${family}:${ingredient.id}`,
+            label: ingredient.nameEs,
+            subtitle: `Tipo: ${label}`,
+            ingredientId: ingredient.id,
+          });
+        }
+      }
+    }
+
+    if (mode === "todo" || mode === "tipo") {
+      for (const ingredient of ingredients) {
+        const hay = [ingredient.name, ingredient.nameEs, ...(ingredient.aliases || [])].join(" ");
+        if (!includesNormalized(hay, q)) continue;
+        if (hits.some((h) => h.ingredientId === ingredient.id && h.kind !== "brand")) continue;
+        hits.push({
+          kind: "ingredient",
+          id: `ingredient:${ingredient.id}`,
+          label: ingredient.nameEs,
+          subtitle: ingredient.kind,
+          ingredientId: ingredient.id,
+        });
+      }
+    }
+
+    return hits
+      .sort((a, b) => {
+        const la = normalizeText(a.label);
+        const lb = normalizeText(b.label);
+        const sa = la === q ? 100 : la.startsWith(q) ? 80 : a.kind === "brand" ? 60 : 40;
+        const sb = lb === q ? 100 : lb.startsWith(q) ? 80 : b.kind === "brand" ? 60 : 40;
+        return sb - sa;
+      })
+      .slice(0, limit);
+  }
+
+  function matchCocktails(pantry) {
+    const pantryIds = new Set(pantry.map((p) => p.ingredientId));
+    const byId = new Map(ingredients.map((i) => [i.id, i]));
+    const results = [];
+
+    for (const cocktail of cocktails) {
+      const required = cocktail.ingredients.filter((ci) => !ci.optional);
+      const missingIds = required.map((ci) => ci.ingredientId).filter((id) => !pantryIds.has(id));
+      const matchedCount = required.length - missingIds.length;
+      if (pantry.length > 0 && matchedCount === 0) continue;
+      const missing = missingIds.map((id) => byId.get(id)).filter(Boolean);
+      let score = matchedCount * 10 - missingIds.length * 4;
+      if (required.length > 0 && missingIds.length === 0) score += 40;
+      if (required.length > 0 && missingIds.length === 1) score += 15;
+      results.push({
+        cocktail,
+        score,
+        missing,
+        matchedCount,
+        totalRequired: required.length,
+        canMake: missingIds.length === 0 && required.length > 0,
+      });
+    }
+
+    return results
+      .sort((a, b) => {
+        if (a.canMake !== b.canMake) return a.canMake ? -1 : 1;
+        if (a.missing.length !== b.missing.length) return a.missing.length - b.missing.length;
+        return b.score - a.score;
+      })
+      .slice(0, 24);
+  }
+
+  const state = {
+    mode: "todo",
+    pantry: [],
+  };
+
+  const queryInput = document.getElementById("pantry-query");
+  const resultsList = document.getElementById("search-results");
+  const chips = document.getElementById("pantry-chips");
+  const resultsSection = document.getElementById("results");
+  const resultsGrid = document.getElementById("results-grid");
+
+  document.querySelectorAll(".search-modes button").forEach((button) => {
+    button.addEventListener("click", () => {
+      state.mode = button.dataset.mode;
+      document.querySelectorAll(".search-modes button").forEach((b) => {
+        b.setAttribute("aria-pressed", String(b === button));
+      });
+      renderHits();
+    });
+  });
+
+  queryInput.addEventListener("input", renderHits);
+
+  function renderHits() {
+    const hits = searchPantry(queryInput.value, state.mode);
+    resultsList.innerHTML = "";
+    if (!hits.length) {
+      resultsList.hidden = true;
+      return;
+    }
+    resultsList.hidden = false;
+    for (const hit of hits) {
+      const li = document.createElement("li");
+      const button = document.createElement("button");
+      button.type = "button";
+      button.innerHTML = `<strong>${hit.label}</strong>${hit.subtitle ? `<small>${hit.subtitle}</small>` : ""}`;
+      button.addEventListener("click", () => {
+        if (!state.pantry.some((p) => p.ingredientId === hit.ingredientId && p.brandId === hit.brandId)) {
+          state.pantry.push({
+            ingredientId: hit.ingredientId,
+            brandId: hit.brandId,
+            label: hit.label,
+          });
+        }
+        queryInput.value = "";
+        resultsList.hidden = true;
+        renderChips();
+      });
+      li.appendChild(button);
+      resultsList.appendChild(li);
+    }
+  }
+
+  function renderChips() {
+    chips.innerHTML = "";
+    for (const item of state.pantry) {
+      const chip = document.createElement("span");
+      chip.className = "pantry-chip";
+      chip.innerHTML = `<span>${item.label}</span>`;
+      const remove = document.createElement("button");
+      remove.type = "button";
+      remove.setAttribute("aria-label", `Quitar ${item.label}`);
+      remove.textContent = "×";
+      remove.addEventListener("click", () => {
+        state.pantry = state.pantry.filter(
+          (p) => !(p.ingredientId === item.ingredientId && p.brandId === item.brandId),
+        );
+        renderChips();
+      });
+      chip.appendChild(remove);
+      chips.appendChild(chip);
+    }
+  }
+
+  document.getElementById("match-button").addEventListener("click", () => {
+    const matches = matchCocktails(state.pantry);
+    resultsSection.hidden = false;
+    resultsGrid.innerHTML = "";
+    if (!state.pantry.length) {
+      resultsGrid.innerHTML = `<p class="muted">Añade al menos un ingrediente o marca.</p>`;
+      return;
+    }
+    if (!matches.length) {
+      resultsGrid.innerHTML = `<p class="muted">No encontramos coincidencias. Prueba con una base (ron, ginebra…) o un cítrico.</p>`;
+      return;
+    }
+    for (const match of matches) {
+      const article = document.createElement("article");
+      article.className = "card";
+      const badge = match.canMake
+        ? "Lo puedes hacer"
+        : match.missing.length === 1
+          ? `Te falta ${match.missing[0].nameEs}`
+          : `Te faltan ${match.missing.length}`;
+      article.innerHTML = `
+        <p class="muted" style="margin:0 0 0.35rem;font-size:0.85rem;">${badge}</p>
+        <h3 style="margin:0 0 0.5rem;font-family:var(--display);">
+          <a href="/coctel/${match.cocktail.slug}">${match.cocktail.nameEs}</a>
+        </h3>
+        <p class="muted" style="margin:0;">${match.cocktail.introEs || match.cocktail.glass}</p>
+      `;
+      resultsGrid.appendChild(article);
+    }
+  });
+</script>

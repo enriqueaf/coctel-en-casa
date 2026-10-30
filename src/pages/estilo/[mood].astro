@@ -1,0 +1,42 @@
+---
+export const prerender = true;
+import BaseLayout from "../../components/BaseLayout.astro";
+import CocktailCard from "../../components/CocktailCard.astro";
+import { getCocktailsByMood } from "../../domain/catalog";
+import { MOOD_LABEL } from "../../domain/mood";
+import type { Mood } from "../../domain/types";
+
+const moods: Mood[] = ["caribe", "tiki", "clasico", "sofisticado"];
+
+export function getStaticPaths() {
+  return ["caribe", "tiki", "clasico", "sofisticado"].map((mood) => ({
+    params: { mood },
+  }));
+}
+
+const mood = Astro.params.mood as Mood;
+const cocktails = getCocktailsByMood(mood);
+---
+
+<BaseLayout
+  title={`Estilo ${MOOD_LABEL[mood]}`}
+  description={`Cócteles con ambiente ${MOOD_LABEL[mood].toLowerCase()} para preparar en casa.`}
+  mood={mood}
+>
+  <section class="hero">
+    <h1>Estilo {MOOD_LABEL[mood]}</h1>
+    <p class="lead">
+      La web cambia de look con el trago. Aquí están los cócteles que empujan este ambiente.
+    </p>
+    <div class="chip-row">
+      {moods.map((item) => (
+        <a class="chip" href={`/estilo/${item}`} aria-current={item === mood ? "page" : undefined}>
+          {MOOD_LABEL[item]}
+        </a>
+      ))}
+    </div>
+  </section>
+  <div class="grid" style="margin-top:1.5rem;">
+    {cocktails.map((cocktail) => <CocktailCard cocktail={cocktail} />)}
+  </div>
+</BaseLayout>

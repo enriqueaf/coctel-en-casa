@@ -1,0 +1,50 @@
+---
+export const prerender = true;
+import BaseLayout from "../components/BaseLayout.astro";
+---
+
+<BaseLayout
+  title="Fuentes"
+  description="De dónde salen los datos de cócteles de Cóctel en casa."
+  mood="clasico"
+>
+  <section class="hero">
+    <h1>Fuentes</h1>
+    <p class="lead">
+      El catálogo se nutre de datos abiertos y de texto propio. Cada ficha enlaza a su origen.
+    </p>
+  </section>
+
+  <div class="grid" style="margin-top:1.5rem;">
+    <article class="card">
+      <h2>TheCocktailDB</h2>
+      <p>
+        Base principal del catálogo, importada por la
+        <a href="https://www.thecocktaildb.com/documentation">API oficial</a>
+        (`search.php?f=`). Términos:
+        <a href="https://www.thecocktaildb.com/terms_of_use.php">terms of use</a>.
+        Atribución obligatoria. Para uso comercial, TheCocktailDB espera apoyo en Patreon.
+      </p>
+      <p class="muted">
+        No publicamos sus fotos ni copiamos sus instrucciones en inglés. Los pasos en español se
+        generan a partir de medidas, vaso y técnica.
+      </p>
+    </article>
+
+    <article class="card">
+      <h2>Wikidata</h2>
+      <p>
+        Cruce opcional con cócteles oficiales de la IBA
+        (<a href="https://www.wikidata.org/wiki/Q2536409">Q2536409</a>), licencia CC0.
+      </p>
+    </article>
+
+    <article class="card">
+      <h2>Texto propio</h2>
+      <p>
+        Introducciones, pasos cuidados y FAQ de los clásicos destacados viven en
+        <code>data/overrides/</code>. Ilustraciones SVG propias.
+      </p>
+    </article>
+  </div>
+</BaseLayout>

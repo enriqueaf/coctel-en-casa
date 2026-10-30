@@ -1,0 +1,35 @@
+---
+export const prerender = true;
+import BaseLayout from "../../components/BaseLayout.astro";
+import CocktailCard from "../../components/CocktailCard.astro";
+import { getCocktailsByBase } from "../../domain/catalog";
+import type { SpiritBase } from "../../domain/types";
+
+const bases: { slug: SpiritBase; title: string; description: string }[] = [
+  { slug: "ron", title: "Cócteles con ron", description: "Mojitos, daiquirís y tragos de playa con ron." },
+  { slug: "ginebra", title: "Cócteles con ginebra", description: "Negroni, Martini y clásicos con ginebra." },
+  { slug: "vodka", title: "Cócteles con vodka", description: "Cosmopolitan, Moscow Mule y más." },
+  { slug: "whisky", title: "Cócteles con whisky", description: "Old Fashioned, Manhattan y sour." },
+  { slug: "tequila", title: "Cócteles con tequila", description: "Margarita, Paloma y compañía." },
+  { slug: "brandy", title: "Cócteles con brandy", description: "Sidecar y clásicos con brandy o coñac." },
+];
+
+export function getStaticPaths() {
+  return ["ron", "ginebra", "vodka", "whisky", "tequila", "brandy"].map((ingredient) => ({
+    params: { ingredient },
+  }));
+}
+
+const meta = bases.find((b) => b.slug === Astro.params.ingredient)!;
+const cocktails = getCocktailsByBase(meta.slug);
+---
+
+<BaseLayout title={meta.title} description={meta.description} mood="caribe">
+  <section class="hero">
+    <h1>{meta.title}</h1>
+    <p class="lead">{meta.description}</p>
+  </section>
+  <div class="grid" style="margin-top:1.5rem;">
+    {cocktails.map((cocktail) => <CocktailCard cocktail={cocktail} />)}
+  </div>
+</BaseLayout>

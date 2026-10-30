@@ -1,0 +1,160 @@
+---
+export const prerender = true;
+import BaseLayout from "../components/BaseLayout.astro";
+import { getCocktails } from "../domain/catalog";
+import { BASE_OPTIONS, MOMENT_OPTIONS, TASTE_OPTIONS } from "../domain/quiz";
+
+const cocktails = getCocktails().map((c) => ({
+  slug: c.slug,
+  nameEs: c.nameEs,
+  alcoholic: c.alcoholic,
+  mood: c.mood,
+  tastes: c.tastes,
+  bases: c.bases,
+  introEs: c.introEs || "",
+  glass: c.glass,
+}));
+---
+
+<BaseLayout
+  title="Sorpréndeme"
+  description="Elige sabores, base y momento; recibe una tanda aleatoria de cócteles que te pueden gustar."
+  mood="caribe"
+>
+  <section class="hero">
+    <h1>Sorpréndeme</h1>
+    <p class="lead">
+      Un cuestionario corto de tarjetas. Sin foto ni modelo de pago: marcas lo que te apetece y barajamos el catálogo.
+    </p>
+
+    <div id="quiz-app">
+      <h2>¿Qué sabores te van?</h2>
+      <div class="quiz-options" data-group="tastes">
+        {TASTE_OPTIONS.map((option) => (
+          <button class="quiz-option" type="button" data-value={option.id} aria-pressed="false">
+            <strong>{option.label}</strong>
+            <div class="muted">{option.hint}</div>
+          </button>
+        ))}
+      </div>
+
+      <h2 style="margin-top:1.5rem;">¿Base?</h2>
+      <div class="quiz-options" data-group="base" data-single="true">
+        {BASE_OPTIONS.map((option) => (
+          <button
+            class="quiz-option"
+            type="button"
+            data-value={option.id}
+            aria-pressed={option.id === "cualquiera" ? "true" : "false"}
+          >
+            <strong>{option.label}</strong>
+          </button>
+        ))}
+      </div>
+
+      <h2 style="margin-top:1.5rem;">¿Momento?</h2>
+      <div class="quiz-options" data-group="moment" data-single="true">
+        {MOMENT_OPTIONS.map((option) => (
+          <button
+            class="quiz-option"
+            type="button"
+            data-value={option.id}
+            aria-pressed={option.id === "cualquiera" ? "true" : "false"}
+          >
+            <strong>{option.label}</strong>
+          </button>
+        ))}
+      </div>
+
+      <div class="actions" style="margin-top:1.5rem;">
+        <button class="button" type="button" id="shuffle-button">Barajar cócteles</button>
+      </div>
+    </div>
+  </section>
+
+  <section style="margin-top:2rem;" id="quiz-results" hidden>
+    <h2 class="page-title">Tu tanda</h2>
+    <div class="grid" id="quiz-grid"></div>
+  </section>
+</BaseLayout>
+
+<script define:vars={{ cocktails }}>
+  const state = {
+    tastes: [],
+    base: "cualquiera",
+    moment: "cualquiera",
+    seen: [],
+  };
+
+  document.querySelectorAll(".quiz-options").forEach((group) => {
+    const single = group.dataset.single === "true";
+    group.querySelectorAll("button").forEach((button) => {
+      button.addEventListener("click", () => {
+        if (single) {
+          group.querySelectorAll("button").forEach((b) => b.setAttribute("aria-pressed", "false"));
+          button.setAttribute("aria-pressed", "true");
+          state[group.dataset.group] = button.dataset.value;
+        } else {
+          const pressed = button.getAttribute("aria-pressed") === "true";
+          button.setAttribute("aria-pressed", String(!pressed));
+          state.tastes = [...group.querySelectorAll('button[aria-pressed="true"]')].map(
+            (b) => b.dataset.value,
+          );
+        }
+      });
+    });
+  });
+
+  function randomSample(count = 6) {
+    let pool = cocktails.filter((c) => !state.seen.includes(c.slug));
+    if (state.base === "sin-alcohol") pool = pool.filter((c) => !c.alcoholic);
+    else if (state.base !== "cualquiera" && state.base !== "otro") {
+      const filtered = pool.filter((c) => c.bases.includes(state.base));
+      if (filtered.length >= count) pool = filtered;
+    }
+    if (state.tastes.length) {
+      const filtered = pool.filter((c) => state.tastes.some((t) => c.tastes.includes(t)));
+      if (filtered.length >= count) pool = filtered;
+    }
+    if (state.moment === "playa") {
+      const filtered = pool.filter((c) => c.mood === "caribe" || c.mood === "tiki");
+      if (filtered.length >= count) pool = filtered;
+    } else if (state.moment === "despues") {
+      const filtered = pool.filter((c) => c.mood === "sofisticado");
+      if (filtered.length >= count) pool = filtered;
+    }
+
+    const shuffled = [...pool];
+    for (let i = shuffled.length - 1; i > 0; i -= 1) {
+      const j = Math.floor(Math.random() * (i + 1));
+      [shuffled[i], shuffled[j]] = [shuffled[j], shuffled[i]];
+    }
+    return shuffled.slice(0, count);
+  }
+
+  document.getElementById("shuffle-button").addEventListener("click", () => {
+    const sample = randomSample();
+    state.seen = [...state.seen, ...sample.map((c) => c.slug)].slice(-40);
+    const section = document.getElementById("quiz-results");
+    const grid = document.getElementById("quiz-grid");
+    section.hidden = false;
+    grid.innerHTML = "";
+    if (!sample.length) {
+      grid.innerHTML = `<p class="muted">No quedan cócteles con ese filtro. Cambia un gusto o vuelve a barajar.</p>`;
+      state.seen = [];
+      return;
+    }
+    for (const cocktail of sample) {
+      const article = document.createElement("article");
+      article.className = "card";
+      article.innerHTML = `
+        <p class="muted" style="margin:0 0 0.35rem;font-size:0.85rem;">${cocktail.mood}</p>
+        <h3 style="margin:0 0 0.5rem;font-family:var(--display);">
+          <a href="/coctel/${cocktail.slug}">${cocktail.nameEs}</a>
+        </h3>
+        <p class="muted" style="margin:0;">${cocktail.introEs || cocktail.glass}</p>
+      `;
+      grid.appendChild(article);
+    }
+  });
+</script>

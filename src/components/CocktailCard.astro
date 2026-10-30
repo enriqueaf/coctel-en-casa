@@ -1,0 +1,24 @@
+---
+import type { Cocktail } from "../domain/types";
+import { MOOD_LABEL } from "../domain/mood";
+
+interface Props {
+  cocktail: Cocktail;
+  badge?: string;
+}
+
+const { cocktail, badge } = Astro.props;
+---
+
+<article class="card">
+  <p class="muted" style="margin:0 0 0.35rem; font-size:0.85rem;">
+    {MOOD_LABEL[cocktail.mood]}
+    {badge ? ` · ${badge}` : ""}
+  </p>
+  <h3 style="margin:0 0 0.5rem; font-family:var(--display);">
+    <a href={`/coctel/${cocktail.slug}`}>{cocktail.nameEs}</a>
+  </h3>
+  <p class="muted" style="margin:0;">
+    {cocktail.introEs?.slice(0, 120) || `${cocktail.glass} · ${cocktail.category}`}
+  </p>
+</article>

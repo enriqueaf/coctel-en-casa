@@ -1,0 +1,32 @@
+{
+  "name": "coctel-en-casa",
+  "type": "module",
+  "version": "0.0.1",
+  "engines": {
+    "node": ">=22.23.4"
+  },
+  "scripts": {
+    "dev": "astro dev",
+    "build": "astro build",
+    "preview": "astro preview",
+    "astro": "astro",
+    "generate-types": "wrangler types",
+    "test": "vitest run",
+    "test:watch": "vitest",
+    "import:cocktails": "tsx scripts/import-thecocktaildb.ts",
+    "import:wikidata": "tsx scripts/import-wikidata.ts",
+    "seed:d1": "tsx scripts/seed-d1.ts",
+    "db:migrate": "wrangler d1 migrations apply coctel-en-casa --local"
+  },
+  "dependencies": {
+    "@astrojs/cloudflare": "^14.4.3",
+    "astro": "^7.4.4",
+    "wrangler": "^4.156.0",
+    "zod": "^4.6.7"
+  },
+  "devDependencies": {
+    "@types/node": "^26.6.6",
+    "tsx": "^4.23.15",
+    "vitest": "^5.0.5"
+  }
+}
